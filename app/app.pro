@@ -19,6 +19,7 @@ SOURCES += src/harbour-owncloud.cpp \
     src/transfermanager.cpp \
     src/localfilebrowser.cpp \
     ../common/src/entryinfo.cpp \
+    ../common/src/mtimemixin.cpp \
     ../common/src/settings.cpp \
     ../common/src/shellcommand.cpp \
     ../common/src/transferentry.cpp \
@@ -29,6 +30,7 @@ HEADERS += \
     src/transfermanager.h \
     src/localfilebrowser.h \
     ../common/src/entryinfo.h \
+    ../common/src/mtimemixin.h \
     ../common/src/settings.h \
     ../common/src/shellcommand.h \
     ../common/src/transferentry.h \
