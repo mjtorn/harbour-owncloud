@@ -16,23 +16,23 @@ CONFIG += sailfishapp
 QT += xml dbus
 
 SOURCES += src/harbour-owncloud.cpp \
-    src/owncloudbrowser.cpp \
-    src/entryinfo.cpp \
     src/transfermanager.cpp \
     src/localfilebrowser.cpp \
+    ../common/src/entryinfo.cpp \
     ../common/src/settings.cpp \
     ../common/src/shellcommand.cpp \
     ../common/src/transferentry.cpp \
+    ../common/src/owncloudbrowser.cpp \
     src/daemoncontrol.cpp
 
 HEADERS += \
-    src/owncloudbrowser.h \
-    src/entryinfo.h \
     src/transfermanager.h \
     src/localfilebrowser.h \
+    ../common/src/entryinfo.h \
     ../common/src/settings.h \
     ../common/src/shellcommand.h \
     ../common/src/transferentry.h \
+    ../common/src/owncloudbrowser.h \
     src/daemoncontrol.h
 
 OTHER_FILES += qml/harbour-owncloud.qml \
