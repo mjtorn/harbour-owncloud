@@ -1,7 +1,7 @@
 #include "transfermanager.h"
 
-TransferManager::TransferManager(QObject *parent, OwnCloudBrowser *browser) :
-    QObject(parent)
+TransferManager::TransferManager(MtimeMixin *parent, OwnCloudBrowser *browser) :
+    MtimeMixin(parent)
 {
     this->browser = browser;
 }
@@ -93,6 +93,7 @@ void TransferManager::enqueueUpload(QString localPath, QString remotePath)
                                                    (QStringList) NULL);
 
     connect(newUpload, &TransferEntry::transferCompleted, this, &TransferManager::handleUploadCompleted, Qt::DirectConnection);
+    //connect(newUpload, &MtimeMixin::remoteMtimeSucceeded, this, disconnectThingslol)
     if(uploadQueue.isEmpty()) {
         newUpload->startTransfer();
     }
@@ -156,45 +157,6 @@ void TransferManager::handleUploadCompleted()
     emit transferingChanged();
 }
 
-void TransferManager::setLocalLastModified(TransferEntry* entry)
-{
-    QString localName = entry->getLocalPath();
-    struct utimbuf newTimes;
-    int retval;
-
-    newTimes.actime = time(NULL);
-    newTimes.modtime = entry->getLastModified().toMSecsSinceEpoch() / 1000; // seconds
-
-    retval = utime(localName.toStdString().c_str(), &newTimes);
-    if (retval != 0 ) {
-        emit localMtimeFailed(errno);
-    }
-
-    qDebug() << "Local last modified " << newTimes.modtime;
-    disconnect(this, &TransferManager::downloadComplete, this, &TransferManager::setLocalLastModified);
-}
-
-void TransferManager::setRemoteLastModified(TransferEntry *entry, QString remotePath)
-{
-    Q_ASSERT(remotePath == entry->getRemotePath()); // Technicality for QML
-
-    QWebdav::PropValues props;
-    QMap<QString, QVariant> propMap;
-    QString remoteName = remotePath + entry->getName();
-    qint64 lastModified = entry->getLastModified().toMSecsSinceEpoch() / 1000; // seconds
-    QWebdav* webdav = this->browser->getNewWebdav(); // entry's webdav is private
-
-    webdav->setParent(this);
-    connect(webdav, &QWebdav::finished, this, &TransferManager::setRemoteMtimeFinished);
-
-    propMap["lastmodified"] = (QVariant) lastModified;
-    props["DAV:"] = propMap;
-
-    webdav->proppatch(remoteName, props);
-    qDebug() << "Remote last modified " << lastModified;
-    disconnect(this, &TransferManager::uploadComplete, this, &TransferManager::setRemoteLastModified);
-}
-
 bool TransferManager::isNotEnqueued(EntryInfo *entry)
 {
     if(entry == NULL)
@@ -236,16 +198,3 @@ QString TransferManager::destinationFromMIME(QString mime)
     return QStandardPaths::writableLocation(location);
 }
 
-
-void TransferManager::setRemoteMtimeFinished(QNetworkReply *networkReply)
-{
-    QVariant attr = networkReply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-    int status = attr.toInt();
-    qDebug() << "setting mtime status " << status;
-    if (status < 200 || status >= 300) {
-        emit remoteMtimeFailed(status);
-    } else {
-        // Refresh to see the current, new mtime
-        this->browser->getDirectoryContent(this->browser->getCurrentPath());
-    }
-}
